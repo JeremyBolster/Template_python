@@ -1,0 +1,40 @@
+pid_file: /tmp/template.pid  # The lock decorator does not use the pid file, instead using the lock file.
+lock_file: /tmp/template.lock # Daemonize uses the pid file for getting a lock and does not require lock.
+
+logging:
+  # logFile: /tmp/template-log-file.log
+  # maxBytes: 10485760 # 10MB
+  # backupCount: 5
+
+
+  version: 1
+  disable_existing_loggers: False
+  formatters:
+      # Log formating is in such a way that you can usually pull out the boilerplate to make for easier viewing
+      # eg.  
+      # remove time: cut -c24- /tmp/template-log-file.log
+      # remove file info: cut -c-34 -c76- /tmp/template-log-file.log
+      simple:    # |-23 chars-||-- 10 chars ---||-------- 41 chars ---------| 
+          format: "%(asctime)s [%(levelname)-8s][%(filename)-35s:%(lineno)3s] %(message)s"
+      threaded:
+          format: "%(asctime)s [%(levelname)-7s][%(threadName)20s-%(thread)2d][%(filename)-35s: %(lineno)3s] %(message)s"
+
+  handlers:
+      console:
+          class: logging.StreamHandler
+          level: INFO  # Overridden by '-v' flag
+          formatter: simple
+          stream: ext://sys.stdout
+
+      file_handler:
+          class: logging.handlers.RotatingFileHandler
+          level: DEBUG
+          formatter: simple
+          filename: /tmp/template-log-file.log
+          maxBytes: 10485760 # 10MB
+          backupCount: 5
+          encoding: utf8
+
+  root:
+      level: DEBUG
+      handlers: [console, file_handler]
