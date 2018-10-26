@@ -8,6 +8,7 @@ import time
 import signal
 import sys
 import logging
+import logging.config
 import os
 from time import sleep
 from functools import wraps
@@ -70,23 +71,14 @@ def process_id(function):
 @click.argument('config-file', type=click.Path(exists=True, resolve_path=True))
 def cli(config_file, verbose):
 	
-	log_level = logging.DEBUG if verbose else logging.INFO
-	logging.basicConfig(level=log_level)
-
-	logging.getLogger().removeHandler(logging.getLogger().handlers[0])
-
-	stream_handler = logging.StreamHandler(sys.stdout)
-	stream_handler.setFormatter(LOG_FORMAT)
-	stream_handler.setLevel(log_level)
-	logging.getLogger().addHandler(stream_handler)
-
 	load_config(config_file) # Loaded as a global for this file only! Do not import this elsewhere.
 
+	log_level = logging.DEBUG if verbose else logging.INFO
+	logging_config = config['logging']
+	logging_config['handlers']['console']['level'] = log_level
+	logging.config.dictConfig(logging_config)
 	global file_handler
-	file_handler = logging.FileHandler(config['log_file'])
-	file_handler.setFormatter(LOG_FORMAT)
-	file_handler.setLevel(log_level)
-	logging.getLogger().addHandler(file_handler)
+	file_handler = logging.getLogger().handlers[1]
 
 
 @cli.command()
@@ -151,7 +143,6 @@ def load_config(config_file):
 	with open(config_file, 'r') as f:
 		config = yaml.load(f)
 	config['config_file'] = config_file
-	logging.getLogger(__name__).info('Config dump %s', config['lock_file'])
 
 
 
